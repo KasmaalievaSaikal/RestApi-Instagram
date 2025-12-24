@@ -1,12 +1,17 @@
 package java19.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
+import java19.enums.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -18,39 +23,33 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User {
+@Builder
+public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_gen")
-    @SequenceGenerator(name = "user_gen", sequenceName = "user_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     Long id;
     @Column(name = "user_name", unique = true)
     String userName;
     @Column(unique = true, nullable = false)
     String password;
-    @Email(message = "Email должен содержать символ @ и иметь корректный формат")
     @Column(unique = true, nullable = false)
     String email;
-    @Pattern(regexp = "^//+[0-9]+$", message = "Номер телефона должен начинаться с '+' и содержать +996")
     @Column(name = "phone_number", nullable = false)
     String phoneNumber;
+    @Enumerated(EnumType.STRING)
+    Role role;
 
+    int followersCount;
+
+    int followingCount;
     @OneToMany(mappedBy = "user", cascade = {
             CascadeType.REMOVE,
             CascadeType.DETACH,
             CascadeType.MERGE,
             CascadeType.REFRESH})
-    List<Post> posts;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    UserInfo userInfo;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    Follower follower;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    Image image;
+    List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = {
             CascadeType.REMOVE,
@@ -58,13 +57,45 @@ public class User {
             CascadeType.MERGE,
             CascadeType.REFRESH
     })
-    List<Comment> comments;
+    List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = {
+            CascadeType.PERSIST, CascadeType.DETACH,
+            CascadeType.MERGE, CascadeType.REFRESH,
+            CascadeType.REMOVE}, orphanRemoval = true)
+    @JsonManagedReference
+    List<Like> likes = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = {
-            CascadeType.DETACH,
             CascadeType.MERGE,
-            CascadeType.REFRESH
-    })
-    Like like;
+            CascadeType.DETACH,
+            CascadeType.REFRESH,
+            CascadeType.REMOVE})
+    UserInfo userInfo;
+
+    @OneToOne(mappedBy = "user", cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.DETACH,
+            CascadeType.REFRESH,
+            CascadeType.REMOVE}, orphanRemoval = true)
+    @JsonManagedReference
+    Follower follower;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
 
 }

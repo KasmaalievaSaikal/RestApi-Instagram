@@ -20,13 +20,12 @@ public class Like {
     @SequenceGenerator(name = "like_gen", sequenceName = "like_seq", allocationSize = 1)
 
     Long id;
-    String isLike;
+    Boolean isLike;
 
-    @OneToOne(cascade = {
+    @ManyToOne(cascade = {
             CascadeType.DETACH,
-            CascadeType.MERGE,
-            CascadeType.REFRESH
-    })
+            CascadeType.REFRESH,
+            CascadeType.MERGE})
     User user;
 
     @ManyToOne(cascade = {

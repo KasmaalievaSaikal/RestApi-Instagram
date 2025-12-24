@@ -24,6 +24,11 @@ public class UserInfo {
     Long id;
     String fullName;
     String biography;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     Gender gender;
     String image;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    User user;
 }

@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,5 +39,5 @@ public class Comment {
             CascadeType.DETACH,
             CascadeType.MERGE
     })
-    List<Like> likes;
+    List<Like> likes = new ArrayList<>();
 }
